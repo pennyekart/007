@@ -1,12 +1,11 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { Users, TrendingUp, Award, Target, Phone, MapPin, Star, ShoppingCart, Leaf, Coffee, Search } from "lucide-react";
-import RegistrationForm from "@/components/RegistrationForm";
-import AdminPanel from "@/components/AdminPanel";
+import SimpleRegistrationForm from "@/components/SimpleRegistrationForm";
+import SimpleAdminPanel from "@/components/SimpleAdminPanel";
 import CategoriesPage from "@/components/CategoriesPage";
 import AboutProgram from "@/components/AboutProgram";
 import ApplicationStatusChecker from "@/components/ApplicationStatusChecker";
@@ -335,11 +334,11 @@ const Index = () => {
           </TabsContent>
 
           <TabsContent value="register">
-            <RegistrationForm />
+            <SimpleRegistrationForm />
           </TabsContent>
 
           <TabsContent value="admin">
-            <AdminPanel />
+            <SimpleAdminPanel />
           </TabsContent>
         </Tabs>
       </main>

@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Badge } from "@/components/ui/badge";
 import { Search, CheckCircle, Clock, XCircle } from "lucide-react";
+
 interface Registration {
   id: string;
   fullName: string;
@@ -14,11 +15,13 @@ interface Registration {
   submittedAt: string;
   uniqueId?: string;
 }
+
 const ApplicationStatusChecker = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [searchResult, setSearchResult] = useState<Registration | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+
   const categories = [{
     value: "pennyekart-free",
     label: "Pennyekart Free Registration"
@@ -41,6 +44,7 @@ const ApplicationStatusChecker = () => {
     value: "job-card",
     label: "Job Card (All Categories)"
   }];
+
   const handleSearch = () => {
     if (!searchQuery.trim()) return;
     setIsSearching(true);
@@ -50,7 +54,11 @@ const ApplicationStatusChecker = () => {
     // Simulate search delay
     setTimeout(() => {
       const registrations = JSON.parse(localStorage.getItem('sedp_registrations') || '[]');
-      const found = registrations.find((reg: Registration) => reg.mobileNumber === searchQuery.trim() || reg.uniqueId === searchQuery.trim().toUpperCase());
+      const found = registrations.find((reg: Registration) => 
+        reg.mobileNumber === searchQuery.trim() || 
+        reg.uniqueId === searchQuery.trim().toUpperCase()
+      );
+      
       if (found) {
         setSearchResult(found);
       } else {
@@ -59,6 +67,7 @@ const ApplicationStatusChecker = () => {
       setIsSearching(false);
     }, 1000);
   };
+
   const getStatusMessage = (status: string) => {
     switch (status) {
       case 'pending':
@@ -91,7 +100,9 @@ const ApplicationStatusChecker = () => {
         };
     }
   };
-  return <div className="max-w-2xl mx-auto space-y-6">
+
+  return (
+    <div className="max-w-2xl mx-auto space-y-6">
       <Card>
         <CardHeader className="text-center">
           <CardTitle className="text-2xl">Check Application Status</CardTitle>
@@ -103,15 +114,30 @@ const ApplicationStatusChecker = () => {
           <div className="space-y-2">
             <Label htmlFor="searchQuery">Mobile Number or Unique ID</Label>
             <div className="flex gap-2">
-              <Input id="searchQuery" type="text" placeholder="Enter mobile number (e.g., 9876543210) or Unique ID (e.g., ESP9876543210A)" value={searchQuery} onChange={e => setSearchQuery(e.target.value)} onKeyPress={e => e.key === 'Enter' && handleSearch()} />
-              <Button onClick={handleSearch} disabled={isSearching || !searchQuery.trim()} className="min-w-[100px] text-zinc-50 bg-[#04494a]">
-                {isSearching ? <div className="flex items-center gap-2">
+              <Input
+                id="searchQuery"
+                type="text"
+                placeholder="Enter mobile number (e.g., 9876543210) or Unique ID (e.g., ESP9876543210A)"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && handleSearch()}
+              />
+              <Button
+                onClick={handleSearch}
+                disabled={isSearching || !searchQuery.trim()}
+                className="min-w-[100px] text-zinc-50 bg-[#04494a]"
+              >
+                {isSearching ? (
+                  <div className="flex items-center gap-2">
                     <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
                     Searching...
-                  </div> : <>
+                  </div>
+                ) : (
+                  <>
                     <Search className="h-4 w-4 mr-1" />
                     Search
-                  </>}
+                  </>
+                )}
               </Button>
             </div>
           </div>
@@ -119,7 +145,8 @@ const ApplicationStatusChecker = () => {
       </Card>
 
       {/* Search Results */}
-      {searchResult && <Card className="border-l-4 border-l-blue-500">
+      {searchResult && (
+        <Card className="border-l-4 border-l-blue-500">
           <CardHeader>
             <div className="flex items-center justify-between">
               <div>
@@ -152,23 +179,31 @@ const ApplicationStatusChecker = () => {
                 <p><strong>Applied on:</strong> {new Date(searchResult.submittedAt).toLocaleDateString()}</p>
               </div>
               <div>
-                {searchResult.uniqueId && <p><strong>Unique ID:</strong> <Badge variant="outline">{searchResult.uniqueId}</Badge></p>}
-                <p className="text-base font-bold text-[#920202]"><strong>Category:</strong> {categories.find(cat => cat.value === searchResult.category)?.label}</p>
+                {searchResult.uniqueId && (
+                  <p><strong>Unique ID:</strong> <Badge variant="outline">{searchResult.uniqueId}</Badge></p>
+                )}
+                <p className="text-base font-bold text-[#920202]">
+                  <strong>Category:</strong> {categories.find(cat => cat.value === searchResult.category)?.label}
+                </p>
               </div>
             </div>
 
-            {searchResult.status === 'approved' && <div className="bg-green-50 border border-green-200 rounded-lg p-4">
+            {searchResult.status === 'approved' && (
+              <div className="bg-green-50 border border-green-200 rounded-lg p-4">
                 <h4 className="font-semibold text-green-800 mb-2">Next Steps:</h4>
                 <ul className="text-sm text-green-700 space-y-1">
                   <li>• Keep your Unique ID safe for future reference</li>
                   <li>• You will receive program updates via WhatsApp</li>
                   <li>• Contact support for any questions: +91 9876543210</li>
                 </ul>
-              </div>}
+              </div>
+            )}
           </CardContent>
-        </Card>}
+        </Card>
+      )}
 
-      {notFound && <Card className="border-l-4 border-l-red-500">
+      {notFound && (
+        <Card className="border-l-4 border-l-red-500">
           <CardContent className="pt-6">
             <div className="flex items-center gap-3 text-red-600">
               <XCircle className="h-6 w-6" />
@@ -181,7 +216,10 @@ const ApplicationStatusChecker = () => {
               </div>
             </div>
           </CardContent>
-        </Card>}
-    </div>;
+        </Card>
+      )}
+    </div>
+  );
 };
+
 export default ApplicationStatusChecker;
