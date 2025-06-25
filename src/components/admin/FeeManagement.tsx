@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -8,8 +7,17 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import { Edit, Save, X, Upload, Trash2 } from "lucide-react";
-import { CategoryFee, categories } from "@/types/admin";
+import { categories } from "@/types/admin";
 import { useToast } from "@/hooks/use-toast";
+import { useSupabaseData } from "@/hooks/useSupabaseData";
+
+interface CategoryFee {
+  category: string;
+  actualFee: number;
+  offerFee: number;
+  hasOffer: boolean;
+  image?: string;
+}
 
 interface FeeManagementProps {
   categoryFees: CategoryFee[];
@@ -29,8 +37,10 @@ const FeeManagement = ({
   onFeeUpdate
 }: FeeManagementProps) => {
   const { toast } = useToast();
+  const { updateCategoryImage, updateCategoryFees } = useSupabaseData();
   const [imageDialog, setImageDialog] = useState<{ open: boolean; category: string }>({ open: false, category: "" });
   const [imageUrl, setImageUrl] = useState("");
+  const [localFees, setLocalFees] = useState<{ [key: string]: CategoryFee }>({});
 
   const getCategoryFee = (category: string) => {
     return categoryFees.find(fee => fee.category === category) || { 
@@ -60,24 +70,53 @@ const FeeManagement = ({
     setImageDialog({ open: true, category });
   };
 
-  const handleImageSave = () => {
+  const handleImageSave = async () => {
     if (imageUrl.trim()) {
-      onFeeUpdate(imageDialog.category, 'image', imageUrl);
-      toast({
-        title: "Image Updated",
-        description: "Category image has been updated successfully"
-      });
+      // Update in Supabase
+      const success = await updateCategoryImage(imageDialog.category, imageUrl);
+      if (success) {
+        // Update local state
+        onFeeUpdate(imageDialog.category, 'image', imageUrl);
+        toast({
+          title: "Image Updated",
+          description: "Category image has been updated successfully"
+        });
+      }
     }
     setImageDialog({ open: false, category: "" });
     setImageUrl("");
   };
 
-  const handleImageDelete = (category: string) => {
-    onFeeUpdate(category, 'image', getDefaultImage(category));
-    toast({
-      title: "Image Reset",
-      description: "Category image has been reset to default"
-    });
+  const handleImageDelete = async (category: string) => {
+    const defaultImage = getDefaultImage(category);
+    const success = await updateCategoryImage(category, defaultImage);
+    if (success) {
+      onFeeUpdate(category, 'image', defaultImage);
+      toast({
+        title: "Image Reset",
+        description: "Category image has been reset to default"
+      });
+    }
+  };
+
+  const handleFeeUpdate = (category: string, field: 'actualFee' | 'offerFee' | 'hasOffer', value: number | boolean) => {
+    setLocalFees(prev => ({
+      ...prev,
+      [category]: {
+        ...getCategoryFee(category),
+        [field]: value
+      }
+    }));
+    onFeeUpdate(category, field, value);
+  };
+
+  const handleSaveFees = async () => {
+    // Save all updated fees to Supabase
+    for (const [categoryName, feeData] of Object.entries(localFees)) {
+      await updateCategoryFees(categoryName, feeData.actualFee, feeData.offerFee, feeData.hasOffer);
+    }
+    setLocalFees({});
+    onSave();
   };
 
   const sampleImages = [
@@ -101,7 +140,7 @@ const FeeManagement = ({
             <div className="flex gap-2 flex-shrink-0">
               {editingFees ? (
                 <>
-                  <Button onClick={onSave} className="bg-green-600 hover:bg-green-700" size="sm">
+                  <Button onClick={handleSaveFees} className="bg-green-600 hover:bg-green-700" size="sm">
                     <Save className="h-4 w-4 mr-1" />
                     <span className="hidden sm:inline">Save Changes</span>
                     <span className="sm:hidden">Save</span>
@@ -173,7 +212,7 @@ const FeeManagement = ({
                             <Input
                               type="number"
                               value={currentFee.actualFee}
-                              onChange={(e) => onFeeUpdate(category.value, 'actualFee', parseInt(e.target.value) || 0)}
+                              onChange={(e) => handleFeeUpdate(category.value, 'actualFee', parseInt(e.target.value) || 0)}
                               min="0"
                               className="text-sm"
                             />
@@ -183,7 +222,7 @@ const FeeManagement = ({
                             <Input
                               type="number"
                               value={currentFee.offerFee}
-                              onChange={(e) => onFeeUpdate(category.value, 'offerFee', parseInt(e.target.value) || 0)}
+                              onChange={(e) => handleFeeUpdate(category.value, 'offerFee', parseInt(e.target.value) || 0)}
                               min="0"
                               className="text-sm"
                             />
@@ -192,7 +231,7 @@ const FeeManagement = ({
                             <Checkbox
                               id={`offer-${category.value}`}
                               checked={currentFee.hasOffer}
-                              onCheckedChange={(checked) => onFeeUpdate(category.value, 'hasOffer', !!checked)}
+                              onCheckedChange={(checked) => handleFeeUpdate(category.value, 'hasOffer', !!checked)}
                             />
                             <Label htmlFor={`offer-${category.value}`} className="text-sm">Enable Offer</Label>
                           </div>

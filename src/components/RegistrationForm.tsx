@@ -12,14 +12,10 @@ import { Award, Star, Users, TrendingUp, Leaf, Coffee, ShoppingCart } from "luci
 import QRPaymentCode from "./QRPaymentCode";
 import CategoryPopupModal from "./CategoryPopupModal";
 import { useSupabaseData } from "@/hooks/useSupabaseData";
-import { useAuth } from "@/hooks/useAuth";
-import AuthModal from "./auth/AuthModal";
 
 const RegistrationForm = () => {
   const { toast } = useToast();
-  const { user } = useAuth();
   const { categories, panchayaths, createRegistration } = useSupabaseData();
-  const [showAuthModal, setShowAuthModal] = useState(false);
   const [formData, setFormData] = useState({
     fullName: "",
     mobileNumber: "",
@@ -140,12 +136,6 @@ const RegistrationForm = () => {
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    
-    if (!user) {
-      setShowAuthModal(true);
-      return;
-    }
-
     setIsSubmitting(true);
 
     // Validate required fields
@@ -185,7 +175,7 @@ const RegistrationForm = () => {
     try {
       const tempUniqueId = generateTempUniqueId(formData.mobileNumber, formData.fullName);
 
-      // Create registration using Supabase
+      // Create registration using Supabase (no authentication required)
       const registration = await createRegistration({
         full_name: formData.fullName,
         mobile_number: formData.mobileNumber,
@@ -577,7 +567,7 @@ const RegistrationForm = () => {
                 className="w-full bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-lg py-6"
                 disabled={isSubmitting || !declarationAccepted}
               >
-                {!user ? "Sign In to Submit Registration" : isSubmitting ? "Submitting Registration..." : "Submit Registration"}
+                {isSubmitting ? "Submitting Registration..." : "Submit Registration"}
               </Button>
             </form>
           </CardContent>
@@ -597,12 +587,6 @@ const RegistrationForm = () => {
           onConfirm={handleCategoryConfirm}
         />
       )}
-
-      {/* Auth Modal */}
-      <AuthModal 
-        isOpen={showAuthModal} 
-        onClose={() => setShowAuthModal(false)} 
-      />
     </>
   );
 };
